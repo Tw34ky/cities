@@ -44,6 +44,8 @@ def handle_dialog(res, req):
     user_id = req['session']['user_id']
 
     # если пользователь новый, то просим его представиться.
+    if 'помощь' in req['request']['command']:
+
     if req['session']['new']:
         res['response']['text'] = 'Привет! Назови свое имя!'
         # создаем словарь в который в будущем положим имя пользователя
@@ -97,6 +99,7 @@ def handle_dialog(res, req):
             res['response']['text'] = \
                 'Первый раз слышу об этом городе. Попробуй еще разок!'
 
+    res['response']['buttons'].append('Помощь')
 
 def get_city(req):
     # перебираем именованные сущности
@@ -117,41 +120,6 @@ def get_first_name(req):
             # то возвращаем ее значение.
             # Во всех остальных случаях возвращаем None.
             return entity['value'].get('first_name', None)
-
-
-def play_game(res, req):
-    user_id = req['session']['user_id']
-    attempt = sessionStorage[user_id]['attempt']
-    if attempt == 1:
-        city = random.choice(list(cities))
-        while city in sessionStorage[user_id]['guessed_cities']:
-            city = random.choice(list(cities))
-        sessionStorage[user_id]['city'] = city
-        res['response']['card'] = {}
-        res['response']['card']['type'] = 'BigImage'
-        res['response']['card']['title'] = 'Что это за город?'
-        res['response']['card']['image_id'] = cities[city][attempt - 1]
-        res['response']['text'] = 'Тогда сыграем!'
-    else:
-        city = sessionStorage[user_id]['city']
-        if get_city(req) == city:
-            res['response']['text'] = 'Правильно! Сыграем ещё?'
-            sessionStorage[user_id]['guessed_cities'].append(city)
-            sessionStorage[user_id]['game_started'] = False
-            return
-        else:
-            if attempt == 3:
-                res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
-                sessionStorage[user_id]['game_started'] = False
-                sessionStorage[user_id]['guessed_cities'].append(city)
-                return
-            else:
-                res['response']['card'] = {}
-                res['response']['card']['type'] = 'BigImage'
-                res['response']['card']['title'] = ''
-                res['response']['card']['image_id'] = cities[city][attempt - 1]
-                res['response']['text'] = 'А вот и не угадал!'
-    sessionStorage[user_id]['attempt'] += 1
 
 
 if __name__ == '__main__':
