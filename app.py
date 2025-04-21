@@ -46,6 +46,7 @@ def handle_dialog(res, req):
     # если пользователь новый, то просим его представиться.
     if 'помощь' in req['request']['command']:
         res['response']['text'] = 'Этот навык показывает картинку города, доступного навыку по запросу пользователя.'
+
     if req['session']['new']:
         res['response']['text'] = 'Привет! Назови свое имя!'
         # создаем словарь в который в будущем положим имя пользователя
@@ -98,8 +99,10 @@ def handle_dialog(res, req):
         else:
             res['response']['text'] = \
                 'Первый раз слышу об этом городе. Попробуй еще разок!'
-
-    res['response']['buttons'].append({"hide": False, 'title': 'Помощь'})
+    try:
+        res['response']['buttons'].append({"hide": False, 'title': 'Помощь'})
+    except KeyError:
+        pass
 
 
 def get_city(req):
