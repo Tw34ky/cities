@@ -99,7 +99,8 @@ def handle_dialog(res, req):
             res['response']['text'] = \
                 'Первый раз слышу об этом городе. Попробуй еще разок!'
 
-    res['response']['buttons'].append('Помощь')
+    res['response']['buttons'].append({"hide": False, 'title': 'Помощь'})
+
 
 def get_city(req):
     # перебираем именованные сущности
