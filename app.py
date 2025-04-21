@@ -46,6 +46,7 @@ def handle_dialog(res, req):
     # если пользователь новый, то просим его представиться.
     if 'помощь' in req['request']['command']:
         res['response']['text'] = 'Этот навык показывает картинку города, доступного навыку по запросу пользователя.'
+        return
 
     if req['session']['new']:
         res['response']['text'] = 'Привет! Назови свое имя!'
