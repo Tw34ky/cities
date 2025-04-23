@@ -42,24 +42,19 @@ def main():
 
 
 def get_country(city):
-    url = "https://geocode-maps.yandex.ru/1.x/"
     apikey = "8013b162-6b42-4997-9691-77b7074026e0"
-    params = {
-        'geocode': city,
-        'format': 'json',
-        'apikey': apikey
-    }
     url_str = f"https://geocode-maps.yandex.ru/1.x?apikey={apikey}&geocode={city}&format=json"
-    response = requests.get(url, params)
+    response = requests.get(url_str)
     json = response.json()
     try:
         j = json['response']
+        return \
+            json['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['metaDataProperty'][
+                'GeocoderMetaData']['AddressDetails']['Country']['CountryName']
     except KeyError:
         print("Http статус:", response.status_code, "(", response.reason, ")")
         print(url_str)
-    return \
-        json['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['metaDataProperty'][
-            'GeocoderMetaData']['AddressDetails']['Country']['CountryName']
+        return
 
 
 def handle_dialog(res, req):
