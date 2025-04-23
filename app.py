@@ -43,11 +43,11 @@ def main():
 
 def get_country(city):
     url = "https://geocode-maps.yandex.ru/1.x/"
-    apikey = "f3a0fe3a-b07e-4840-a1da-06f18b2ddf13"
+    apikey = "8013b162-6b42-4997-9691-77b7074026e0"
     params = {
         'geocode': city,
         'format': 'json',
-        'apikey': "8013b162-6b42-4997-9691-77b7074026e0"
+        'apikey': apikey
     }
     url_str = f"https://geocode-maps.yandex.ru/1.x?apikey={apikey}&geocode={city}&format=json"
     response = requests.get(url, params)
