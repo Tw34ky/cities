@@ -21,6 +21,13 @@ cities = {
               '997614/4b6cc5293270818a9f08']
 }
 
+countries = {
+    'москва': 'Россия',
+    'нью-йорк': 'США',
+    'париж': 'франция'
+
+}
+
 # создаем словарь, где для каждого пользователя
 # мы будем хранить его имя
 sessionStorage = {}
@@ -148,13 +155,12 @@ def play_game(res, req):
         res['response']['text'] = 'Тогда сыграем!'
     else:
         # сюда попадаем, если попытка отгадать не первая
-        print(sessionStorage)
         city = sessionStorage[user_id]['city']
         # проверяем есть ли правильный ответ в сообщение
         if get_city(req) == city:
             res['response']['text'] = 'Правильно! А в какой стране этот город?'
             flag = True
-        if get_country(req) == city and flag:
+        if get_country(city) == city and flag:
                 # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
                 # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
                 res['response']['text'] = 'Правильно! Сыграем ещё?'
