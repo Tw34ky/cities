@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import logging
+import requests
 import json
 import random
 
@@ -38,6 +39,27 @@ def main():
     handle_dialog(response, request.json)
     logging.info('Response: %r', response)
     return json.dumps(response)
+
+
+def get_country(city):
+    url = "https://geocode-maps.yandex.ru/1.x/"
+    apikey = "f3a0fe3a-b07e-4840-a1da-06f18b2ddf13"
+    params = {
+        'geocode': city,
+        'format': 'json',
+        'apikey': "8013b162-6b42-4997-9691-77b7074026e0"
+    }
+    url_str = f"https://geocode-maps.yandex.ru/1.x?apikey={apikey}&geocode={city}&format=json"
+    response = requests.get(url, params)
+    json = response.json()
+    try:
+        j = json['response']
+    except KeyError:
+        print("Http статус:", response.status_code, "(", response.reason, ")")
+        print(url_str)
+    return \
+        json['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['metaDataProperty'][
+            'GeocoderMetaData']['AddressDetails']['Country']['CountryName']
 
 
 def handle_dialog(res, req):
@@ -129,48 +151,52 @@ def play_game(res, req):
         res['response']['text'] = 'Тогда сыграем!'
     else:
         # сюда попадаем, если попытка отгадать не первая
+        print(sessionStorage)
         city = sessionStorage[user_id]['city']
         # проверяем есть ли правильный ответ в сообщение
         if get_city(req) == city:
-            # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
-            # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
-            res['response']['text'] = 'Правильно! Сыграем ещё?'
-            res['response']['buttons'] = [
-                {
-                    'title': 'Да',
-                    'hide': True
-                },
-                {
-                    'title': 'Нет',
-                    'hide': True
-                },
-                {
-                    'title': 'Покажи город на карте',
-                    'hide': True,
-                    'url': f'https://yandex.ru/maps/?mode=search&text={city}'
-                }
-            ]
-            sessionStorage[user_id]['guessed_cities'].append(city)
-            sessionStorage[user_id]['game_started'] = False
-            return
-        else:
-            # если нет
-            if attempt == 3:
-                # если попытка третья, то значит, что все картинки мы показали.
-                # В этом случае говорим ответ пользователю,
-                # добавляем город к sessionStorage[user_id]['guessed_cities'] и отправляем его на второй круг.
-                # Обратите внимание на этот шаг на схеме.
-                res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
-                sessionStorage[user_id]['game_started'] = False
+            res['response']['text'] = 'Правильно! А в какой стране этот город?'
+
+        if get_country(req) == city:
+                # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
+                # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
+                res['response']['text'] = 'Правильно! Сыграем ещё?'
+                res['response']['buttons'] = [
+                    {
+                        'title': 'Да',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Нет',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Покажи город на карте',
+                        'hide': True,
+                        'url': f'https://yandex.ru/maps/?mode=search&text={city}'
+                    }
+                ]
                 sessionStorage[user_id]['guessed_cities'].append(city)
+                sessionStorage[user_id]['game_started'] = False
                 return
             else:
-                # иначе показываем следующую картинку
-                res['response']['card'] = {}
-                res['response']['card']['type'] = 'BigImage'
-                res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
-                res['response']['card']['image_id'] = cities[city][attempt - 1]
-                res['response']['text'] = 'А вот и не угадал!'
+                # если нет
+                if attempt == 3:
+                    # если попытка третья, то значит, что все картинки мы показали.
+                    # В этом случае говорим ответ пользователю,
+                    # добавляем город к sessionStorage[user_id]['guessed_cities'] и отправляем его на второй круг.
+                    # Обратите внимание на этот шаг на схеме.
+                    res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
+                    sessionStorage[user_id]['game_started'] = False
+                    sessionStorage[user_id]['guessed_cities'].append(city)
+                    return
+                else:
+                    # иначе показываем следующую картинку
+                    res['response']['card'] = {}
+                    res['response']['card']['type'] = 'BigImage'
+                    res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
+                    res['response']['card']['image_id'] = cities[city][attempt - 1]
+                    res['response']['text'] = 'А вот и не угадал!'
     # увеличиваем номер попытки доля следующего шага
     sessionStorage[user_id]['attempt'] += 1
 
