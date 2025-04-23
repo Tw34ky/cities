@@ -134,6 +134,7 @@ def handle_dialog(res, req):
 
 def play_game(res, req):
     user_id = req['session']['user_id']
+    flag = None
     attempt = sessionStorage[user_id]['attempt']
     if attempt == 1:
         # если попытка первая, то случайным образом выбираем город для гадания
@@ -156,8 +157,8 @@ def play_game(res, req):
         # проверяем есть ли правильный ответ в сообщение
         if get_city(req) == city:
             res['response']['text'] = 'Правильно! А в какой стране этот город?'
-
-        if get_country(req) == city:
+            flag = True
+        if get_country(req) == city and flag:
                 # если да, то добавляем город к sessionStorage[user_id]['guessed_cities'] и
                 # отправляем пользователя на второй круг. Обратите внимание на этот шаг на схеме.
                 res['response']['text'] = 'Правильно! Сыграем ещё?'
@@ -179,24 +180,24 @@ def play_game(res, req):
                 sessionStorage[user_id]['guessed_cities'].append(city)
                 sessionStorage[user_id]['game_started'] = False
                 return
+        else:
+            # если нет
+            if attempt == 3:
+                # если попытка третья, то значит, что все картинки мы показали.
+                # В этом случае говорим ответ пользователю,
+                # добавляем город к sessionStorage[user_id]['guessed_cities'] и отправляем его на второй круг.
+                # Обратите внимание на этот шаг на схеме.
+                res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
+                sessionStorage[user_id]['game_started'] = False
+                sessionStorage[user_id]['guessed_cities'].append(city)
+                return
             else:
-                # если нет
-                if attempt == 3:
-                    # если попытка третья, то значит, что все картинки мы показали.
-                    # В этом случае говорим ответ пользователю,
-                    # добавляем город к sessionStorage[user_id]['guessed_cities'] и отправляем его на второй круг.
-                    # Обратите внимание на этот шаг на схеме.
-                    res['response']['text'] = f'Вы пытались. Это {city.title()}. Сыграем ещё?'
-                    sessionStorage[user_id]['game_started'] = False
-                    sessionStorage[user_id]['guessed_cities'].append(city)
-                    return
-                else:
-                    # иначе показываем следующую картинку
-                    res['response']['card'] = {}
-                    res['response']['card']['type'] = 'BigImage'
-                    res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
-                    res['response']['card']['image_id'] = cities[city][attempt - 1]
-                    res['response']['text'] = 'А вот и не угадал!'
+                # иначе показываем следующую картинку
+                res['response']['card'] = {}
+                res['response']['card']['type'] = 'BigImage'
+                res['response']['card']['title'] = 'Неправильно. Вот тебе дополнительное фото'
+                res['response']['card']['image_id'] = cities[city][attempt - 1]
+                res['response']['text'] = 'А вот и не угадал!'
     # увеличиваем номер попытки доля следующего шага
     sessionStorage[user_id]['attempt'] += 1
 
